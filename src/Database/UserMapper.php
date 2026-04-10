@@ -25,6 +25,26 @@ class UserMapper implements UserMapperInterface
     {
     }
 
+    /**
+     * Deduplicate an array of associative rows using JSON encoding (avoids insecure unserialize).
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function deduplicateRows(array $rows): array
+    {
+        $seen = [];
+        $unique = [];
+        foreach ($rows as $row) {
+            $key = json_encode($row);
+            if ($key !== false && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[] = $row;
+            }
+        }
+        return $unique;
+    }
+
     public function isSameUser(string $userid, string $currentUserId): bool
     {
         return $userid === $currentUserId;
@@ -914,15 +934,7 @@ class UserMapper implements UserMapperInterface
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $seen = [];
-            $uniqueResults = [];
-            foreach ($results as $row) {
-                $key = json_encode($row);
-                if (!isset($seen[$key])) {
-                    $seen[$key] = true;
-                    $uniqueResults[] = $row;
-                }
-            }
+            $uniqueResults = $this->deduplicateRows($results);
 
             $users = array_map(fn ($row) => new Profile($row), $uniqueResults);
 
@@ -994,15 +1006,7 @@ class UserMapper implements UserMapperInterface
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $seen = [];
-            $uniqueResults = [];
-            foreach ($results as $row) {
-                $key = json_encode($row);
-                if (!isset($seen[$key])) {
-                    $seen[$key] = true;
-                    $uniqueResults[] = $row;
-                }
-            }
+            $uniqueResults = $this->deduplicateRows($results);
 
             $users = array_map(fn ($row) => new Profile($row), $uniqueResults);
 
