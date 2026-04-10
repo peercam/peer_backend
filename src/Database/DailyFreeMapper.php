@@ -13,6 +13,9 @@ use PDOException;
 
 class DailyFreeMapper
 {
+    /** Strict allowlist: only these column names may appear in dynamic queries. */
+    private const ALLOWED_COLUMNS = ['liken', 'comments', 'posten'];
+
     public function __construct(protected PeerLoggerInterface $logger, protected PDO $db)
     {
     }
@@ -108,7 +111,8 @@ class DailyFreeMapper
 
         $column = $columnMap[$artType] ?? null;
 
-        if ($column === null) {
+        // Validate against class-level allowlist
+        if ($column === null || !in_array($column, self::ALLOWED_COLUMNS, true)) {
             throw new InvalidArgumentException('Invalid art type provided.');
         }
 

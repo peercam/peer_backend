@@ -25,6 +25,26 @@ class UserMapper implements UserMapperInterface
     {
     }
 
+    /**
+     * Deduplicate an array of associative rows using JSON encoding (avoids insecure unserialize).
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function deduplicateRows(array $rows): array
+    {
+        $seen = [];
+        $unique = [];
+        foreach ($rows as $row) {
+            $key = json_encode($row);
+            if ($key !== false && !isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[] = $row;
+            }
+        }
+        return $unique;
+    }
+
     public function isSameUser(string $userid, string $currentUserId): bool
     {
         return $userid === $currentUserId;
@@ -136,7 +156,12 @@ class UserMapper implements UserMapperInterface
 
     private function getLocationFromIP(string $ip): ?string
     {
-        $url = "https://ip-api.com/json/{$ip}";
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            $this->logger->debug('Skipping geolocation for invalid or private IP', ['ip' => $ip]);
+            return null;
+        }
+
+        $url = "https://ip-api.com/json/" . urlencode($ip);
 
         try {
             $ch = curl_init();
@@ -909,7 +934,7 @@ class UserMapper implements UserMapperInterface
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $uniqueResults = array_map('unserialize', array_unique(array_map('serialize', $results)));
+            $uniqueResults = $this->deduplicateRows($results);
 
             $users = array_map(fn ($row) => new Profile($row), $uniqueResults);
 
@@ -981,7 +1006,7 @@ class UserMapper implements UserMapperInterface
             $stmt->execute($params);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $uniqueResults = array_map('unserialize', array_unique(array_map('serialize', $results)));
+            $uniqueResults = $this->deduplicateRows($results);
 
             $users = array_map(fn ($row) => new Profile($row), $uniqueResults);
 

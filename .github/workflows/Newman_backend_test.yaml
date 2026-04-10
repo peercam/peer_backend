@@ -18,7 +18,7 @@ permissions:
 jobs:
   auto_label:
     name: Auto Label PR
-    uses: peer-network/.github/.github/workflows/auto-label.yml@main
+    uses: peer-network/.github/.github/workflows/auto-label.yml@aa71c016ee9ada09d5521e9802ccfb165f3d3413 # pin to commit SHA
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
@@ -50,7 +50,7 @@ jobs:
 
   check_branch_sync:
     name: Check if PR Branch is Behind Base
-    uses: peer-network/.github/.github/workflows/check-branch-sync.yml@main
+    uses: peer-network/.github/.github/workflows/check-branch-sync.yml@aa71c016ee9ada09d5521e9802ccfb165f3d3413 # pin to commit SHA
     with:
       base_branch: ${{ github.event.pull_request.base.ref }}
       pr_branch: ${{ github.event.pull_request.head.ref }}
@@ -78,7 +78,7 @@ jobs:
   gitleaks_scan_staged:
     name: Gitleaks PR Scan (Soft Mode)
     needs: [gitleaks_notice]
-    uses: peer-network/peer_global_security/.github/workflows/gitleaks.yml@main
+    uses: peer-network/peer_global_security/.github/workflows/gitleaks.yml@193d2a8e902f05474e48c5483e49374c0594f6b0 # pin to commit SHA
     with:
       config: ".security/gitleaks.toml"
     secrets: inherit
@@ -777,8 +777,11 @@ jobs:
           cp reports/php-8.4/report.html final_reports/reports/${{ github.run_id }}/php-8.4/report.html
 
       - name: Clone gh-pages branch
+        env:
+          REPORTS_DEPLOY_TOKEN: ${{ secrets.REPORTS_DEPLOY_TOKEN }}
         run: |
-          git clone --depth=1 --branch=gh-pages https://x-access-token:${{ secrets.REPORTS_DEPLOY_TOKEN }}@github.com/peer-network/peer-backend-reports.git gh-pages-clone
+          git config --global url."https://x-access-token:${REPORTS_DEPLOY_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git clone --depth=1 --branch=gh-pages https://github.com/peer-network/peer-backend-reports.git gh-pages-clone
           cp -r final_reports/reports/${{ github.run_id }} gh-pages-clone/reports/
 
       - name: Keep only last 10 reports

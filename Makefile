@@ -119,9 +119,9 @@ dev: check-hooks reset-db-and-backend init ## Full setup: env.ci, DB reset, vend
 		echo "No root-owned files found. Skipping sudo chown."; \
 	fi
 
-	@echo "Setting local file permissions to 777/666 for local dev..."
-	find . -type d -exec chmod 777 {} \;
-	find . -type f -exec chmod 666 {} \;
+	@echo "Setting local file permissions for local dev..."
+	find . -type d -exec chmod 755 {} \;
+	find . -type f -exec chmod 644 {} \;
 
 	@echo "Restoring executable bit on git hooks..."
 	chmod +x .githooks/*

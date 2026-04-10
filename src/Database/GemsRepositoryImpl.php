@@ -15,6 +15,14 @@ class GemsRepositoryImpl implements GemsRepository
 {
     use ResponseHelper;
 
+    /** Strict allowlist of source table names permitted in setGlobalWins queries. */
+    private const ALLOWED_WIN_TABLES = [
+        'user_post_views',
+        'user_post_likes',
+        'user_post_dislikes',
+        'user_post_comments',
+    ];
+
     /**
      * @param PeerLoggerInterface $logger Logger instance
      * @param PDO                 $db     Database connection
@@ -240,6 +248,10 @@ class GemsRepositoryImpl implements GemsRepository
             'tableName' => $tableName,
             'winType' => $winType,
         ]);
+
+        if (!in_array($tableName, self::ALLOWED_WIN_TABLES, true)) {
+            throw new \InvalidArgumentException("Invalid table name: {$tableName}");
+        }
 
         try {
             $sql = "SELECT s.userid, s.postid, s.createdat, p.userid as poster 
