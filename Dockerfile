@@ -13,8 +13,12 @@ RUN php -m | grep -qi '^ffi$' || (echo "FFI NOT FOUND after install" && exit 1)
  
 RUN which supervisord
  
-RUN curl -sS https://getcomposer.org/installer | php && \
-    mv composer.phar /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && \
+    EXPECTED_HASH="$(curl -sS https://composer.github.io/installer.sig)" && \
+    ACTUAL_HASH="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")" && \
+    if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then echo 'ERROR: Composer installer corrupt' && rm /tmp/composer-setup.php && exit 1; fi && \
+    php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
+    rm /tmp/composer-setup.php
 
 RUN if [ -f tokencalculation/Cargo.toml ]; then cd tokencalculation && . /root/.cargo/env && cargo build --release; fi
 

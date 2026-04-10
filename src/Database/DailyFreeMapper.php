@@ -108,7 +108,9 @@ class DailyFreeMapper
 
         $column = $columnMap[$artType] ?? null;
 
-        if ($column === null) {
+        // Strict allowlist: only these column names may appear in the query
+        $allowedColumns = ['liken', 'comments', 'posten'];
+        if ($column === null || !in_array($column, $allowedColumns, true)) {
             throw new InvalidArgumentException('Invalid art type provided.');
         }
 

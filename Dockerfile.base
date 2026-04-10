@@ -14,8 +14,10 @@ RUN apt-get update && \
         pgsql pdo pdo_pgsql bcmath xml curl gmp ffi && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Rust and Cargo
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+# Install Rust and Cargo (download first, then execute — avoid piping curl to shell)
+RUN curl https://sh.rustup.rs -sSf -o /tmp/rustup-init.sh && \
+    sh /tmp/rustup-init.sh -y && \
+    rm /tmp/rustup-init.sh && \
     echo 'source $HOME/.cargo/env' >> /root/.bashrc
 ENV PATH="/root/.cargo/bin:$PATH"
 
