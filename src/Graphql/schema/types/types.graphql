@@ -451,7 +451,7 @@ type PostSubCommentsData {
   content: String
   createdat: Date
   amountlikes: Decimal
-  amountreplies: Decimal,
+  amountreplies: Decimal
   isliked: Boolean
   user: BasicUserInfo
   visibilityStatus: ContentVisibilityStatus!
